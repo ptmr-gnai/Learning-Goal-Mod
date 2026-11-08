@@ -43,12 +43,6 @@ Recent feedback and usage counters also use Claude Code's plugin store, which ma
 
 Learning records may contain project details. A fork sends the session context and selected records through the session's existing model connection. The mod adds no analytics service, separate provider, or API key.
 
-### Upgrading from the earlier plugin
-
-Disable or uninstall the earlier plugin before enabling this one. On its first start, if the new goal file doesn't exist, Learning Goal Mod validates and copies the earlier goal and learning-record files into the new directory, when present. It leaves the originals untouched and does not overwrite files in the new location. If an old file is invalid, the copy is stopped and the original is preserved.
-
-Claude Code keeps feedback history and usage counters in a store scoped to each plugin identity. They are not automatically copied to the new plugin: the old store remains available to the old plugin, and the new plugin starts with new counters. Saved goal settings and the separate learning-record file are copied; older feedback that exists only in the old plugin store is not. If needed, export the old history using its export command before uninstalling it.
-
 ## Development and verification
 
 From the repository root:

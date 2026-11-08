@@ -23,8 +23,6 @@ Requires Claude Code 2.1.301 or later for the current interface. In Claude Code,
 
 Choose **Install for you** to enable it in local projects on this machine. The internal plugin name is `learning-goal-mod`; the command you use is `/learning-goal`. In Claude Desktop, use the Code tab with **This computer** selected. Local plugins do not automatically load in cloud sessions.
 
-If you installed an earlier version under a different plugin name, disable or uninstall that version before installing this one so both do not run at once. The [upgrade notes](learning-goal-mod/README.md#upgrading-from-the-earlier-plugin) describe how local files are copied and what stays in the earlier plugin's store.
-
 The current version supports **one active local session at a time**: simultaneous sessions may overwrite shared goal or learning-record updates. Use project/local scope or disable the plugin in other sessions until concurrent writes are supported.
 
 ## Try it
