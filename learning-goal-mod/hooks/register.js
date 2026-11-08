@@ -209,7 +209,7 @@ async function tick($) {
     return;
   }
   if (!eligible({ config: s.config, pending: s.pending, busy: false, working: s.working,
-    card: s.card, now, lastCheck: s.metrics.lastCheck, checks: s.metrics.checks, cards: s.metrics.cards, lastCard: s.metrics.lastCard })) return;
+    card: s.card, now, cards: s.metrics.cards, lastCard: s.metrics.lastCard })) return;
   if ((await $.prompt.read()).text.trim()) return;
   await requestLesson($, false);
 }
@@ -301,7 +301,7 @@ function statusText() {
   return `Goal: ${s.config.goal.active ? s.config.goal.intent : 'not activated'}\n` +
     `Paused: ${s.config.paused}. Automatic: ${s.config.automatic}.\n` +
     `Automatic cards: at most ${s.config.maxCardsPerHour} per hour; ${s.config.cardCooldownMs / 60000} minute cooldown. Limits apply per session.\n` +
-    `Automatic checks: ${s.metrics.checks}/${s.config.maxAutomaticChecks}; manual: ${s.metrics.manualChecks}.\n` +
+    `Automatic checks: ${s.metrics.checks}; manual: ${s.metrics.manualChecks}.\n` +
     `Reported tokens: input ${u.input_tokens}, output ${u.output_tokens}, cache reads ${u.cache_read_input_tokens}, cache writes ${u.cache_creation_input_tokens}.\n` +
     `No dollar estimate. Requests use your Claude account.\n${s.status}`;
 }
@@ -420,7 +420,7 @@ export const register = (on) => {
             if (!/^\d+$/.test(value.trim()) || Number(value) > 1440) { problem($, 'Enter a whole number from 0 to 1440.'); return; }
             return changeConfig($, { cardCooldownMs: Number(value) * 60000 }).catch(() => problem($, 'Could not save the cooldown.'));
           } }),
-        body('There is also a five-minute minimum between automatic checks and a limit of six checks per session.'),
+        body('Checks can happen after each eligible completed turn, including when no card was shown previously.'),
         body(s.status),
       ]));
       children.push(section('USAGE', [body(statusText())]));

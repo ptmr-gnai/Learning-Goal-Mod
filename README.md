@@ -46,7 +46,7 @@ In the **Learning Goal Mod** settings pane, set both:
 
 For example, 3 cards per hour with a 15-minute cooldown permits at most three automatic invitations in a rolling hour and spaces them at least 15 minutes apart. These preferences are shared, but limits are counted per chat, not across all chats. Manual explanations bypass both card limits.
 
-Automatic checks have separate safeguards: at most six per session, at least five minutes apart. A check is a model request and can consume usage even when it doesn't produce a card. The mod does not currently detect whether you are looking at a chat.
+An automatic check can happen after each eligible completed turn when the card limit and cooldown allow it. A check is a model request and can consume usage even when it doesn't produce a card, so the card limits are not a cap on model requests. The mod does not currently detect whether you are looking at a chat.
 
 ## How model requests work
 

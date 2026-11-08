@@ -4,8 +4,6 @@ export const DEFAULT_CONFIG = {
   goal: { id: 'personal-goal', revision: 1, intent: DEFAULT_GOAL, why: '', active: false },
   paused: false,
   automatic: true,
-  minIntervalMs: 300_000,
-  maxAutomaticChecks: 6,
   maxCardsPerHour: 2,
   cardCooldownMs: 300_000,
 };
@@ -27,7 +25,7 @@ export function parseConfig(text) {
     if (v[key] !== undefined && typeof v[key] !== 'boolean') throw new Error('Invalid preference: ' + key);
     c[key] = v[key] ?? c[key];
   }
-  for (const [key, low, high] of [['minIntervalMs', 1000, 86_400_000], ['maxAutomaticChecks', 0, 100], ['maxCardsPerHour', 0, 20], ['cardCooldownMs', 0, 86_400_000]]) {
+  for (const [key, low, high] of [['maxCardsPerHour', 0, 20], ['cardCooldownMs', 0, 86_400_000]]) {
     if (v[key] !== undefined) {
       if (!Number.isSafeInteger(v[key]) || v[key] < low || v[key] > high) throw new Error('Invalid limit: ' + key);
       c[key] = v[key];
@@ -39,11 +37,10 @@ export function parseConfig(text) {
 export function normalize(text) { return text.toLowerCase().replace(/\s+/g, ' ').trim(); }
 export function conceptKey(text) { return normalize(text).replace(/[^a-z0-9]+/g, '-').slice(0, 100); }
 
-export function eligible({ config, pending, busy, working, card, now, lastCheck, checks, cards, lastCard }) {
+export function eligible({ config, pending, busy, working, card, now, cards, lastCard }) {
   const mostRecentCard = Number.isFinite(lastCard) ? lastCard : (cards.length ? Math.max(...cards) : -1e15);
   return config.goal.active && !config.paused && config.automatic && !!pending &&
-    !busy && !working && !card && checks < config.maxAutomaticChecks &&
-    now - lastCheck >= config.minIntervalMs &&
+    !busy && !working && !card &&
     now - mostRecentCard >= config.cardCooldownMs &&
     cards.filter(t => now - t < 3_600_000).length < config.maxCardsPerHour;
 }

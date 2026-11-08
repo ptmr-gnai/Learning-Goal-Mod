@@ -221,6 +221,12 @@ test('watchdog discards late results without launching overlapping paid requests
   resolve(response()); await flush();
   assert.equal(await h.render('AbovePrompt'), undefined);
 });
+test('new turns can request more than six checks without a fixed five-minute delay', async () => {
+  const h = await active({ model: () => ({ text: '{"show":false}' }) });
+  for (let i = 0; i < 7; i++) { await h.complete(turnText); await h.tick(); }
+  assert.equal(h.calls.forks.length, 7);
+  assert.match((await h.command('status')).text, /Automatic checks: 7;/);
+});
 test('failed or invalid replies do not retry automatically or show lessons', async () => {
   for (const model of [() => null, () => ({ isAnswered: false }), () => ({ text: 'not JSON' }), () => { throw Error('offline'); }]) {
     const h = await active({ model }); await h.complete(turnText); await h.tick(); await h.tick();
@@ -274,7 +280,7 @@ test('automatic request counts survive reload and export writes a bounded histor
   const h = await active({ model: () => response() });
   await h.complete(turnText); await h.tick(); await find(await h.render('AbovePrompt'), n => n.key === 'open-lesson').onPress(); await h.press('pane-later');
   const next = await harness({ files: h.files, store: h.store });
-  assert.match((await next.command('status')).text, /Automatic checks: 1\/6/);
+  assert.match((await next.command('status')).text, /Automatic checks: 1;/);
   await next.command('export');
   const output = JSON.parse(next.files.get('/test-home/.config/learning-goal-mod/history-export.json'));
   assert.equal(output.history.at(-1).action, 'later');

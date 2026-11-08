@@ -4,7 +4,7 @@ import { DEFAULT_CONFIG, copy, parseConfig, eligible, evidenceFromTurn, modelTex
 
 test('configuration rejects damaged files and unsafe limits', () => {
   assert.deepEqual(parseConfig(JSON.stringify(DEFAULT_CONFIG)), DEFAULT_CONFIG);
-  for (const value of ['{}', '{', JSON.stringify({ ...DEFAULT_CONFIG, maxAutomaticChecks: -1 }),
+  for (const value of ['{}', '{', JSON.stringify({ ...DEFAULT_CONFIG, cardCooldownMs: -1 }),
     JSON.stringify({ ...DEFAULT_CONFIG, automatic: 'yes' })]) assert.throws(() => parseConfig(value));
 });
 test('automatic selection honors every budget and quiet condition', () => {
@@ -12,10 +12,11 @@ test('automatic selection honors every budget and quiet condition', () => {
   const base = { config, pending: {}, busy: false, working: false, card: null, now: 1_000_000, lastCheck: 0, checks: 0, cards: [] };
   assert.equal(eligible(base), true);
   for (const patch of [{ busy: true }, { working: true }, { card: {} }, { pending: null },
-    { checks: 6 }, { lastCheck: 999_999 }, { cards: [999_000, 999_100] },
+    { cards: [999_000, 999_100] },
     { config: { ...config, paused: true } }, { config: { ...config, automatic: false } }]) {
     assert.equal(eligible({ ...base, ...patch }), false);
   }
+  assert.equal(eligible({ ...base, checks: 100, lastCheck: 999_999 }), true);
 });
 test('hourly cap and card cooldown are independent, including cooldowns longer than an hour', () => {
   const config = { ...copy(DEFAULT_CONFIG), goal: { ...DEFAULT_CONFIG.goal, active: true }, maxCardsPerHour: 3, cardCooldownMs: 7_200_000 };

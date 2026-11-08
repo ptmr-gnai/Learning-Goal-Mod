@@ -27,7 +27,7 @@ The command is `/learning-goal` and the plugin identifier is `learning-goal-mod`
 
 Automatic mode is enabled by default after a goal is activated, unless you switch it off. Settings allow 0–20 automatic cards per rolling hour and a cooldown of 0–1,440 minutes between automatic cards. The defaults are two cards per hour and a five-minute cooldown. Settings are shared; limits are counted per chat. Manual explanations bypass these card limits.
 
-Automatic model checks are also limited to six per session and at least five minutes apart. Checks happen after substantive completed main turns, while the session is idle. A check can consume account usage without producing a card. Manual requests cannot overlap another coaching request.
+Automatic checks can happen after each substantive completed main turn, while the session is idle and the card limit and cooldown allow it. A check can consume account usage without producing a card, so the card limits do not cap model requests. There is no fixed per-session check limit. Manual requests cannot overlap another coaching request.
 
 The mod ignores subagent turn completions, but an independent background chat can still be a main session. It does not currently detect whether a chat is visible. It isn't designed for simultaneous sessions writing the same files.
 
