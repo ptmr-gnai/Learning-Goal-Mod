@@ -47,3 +47,7 @@ claude plugin test .
 ```
 
 The independent tests use Node.js 20 or later. Claude Code's native test runner uses stubs; it does not test live model quality. See the [plugin guide](goal-companion/README.md) for details.
+
+## License
+
+[MIT](LICENSE)
