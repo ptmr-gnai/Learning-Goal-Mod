@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")"
+TASK_NODE="$(command -v node || true)"
+if [ -z "$TASK_NODE" ]; then
+  TASK_NODE="$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node"
+fi
+if [ ! -x "$TASK_NODE" ]; then
+  echo 'Node.js 20 or later is needed for the offline development tools. Claude Code itself loads the plugin without Node.' >&2
+  exit 1
+fi
+case "${1:-test}" in
+  test) exec "$TASK_NODE" --test tests/core.test.js tests/integration.test.js ;;
+  demo) shift; exec "$TASK_NODE" scripts/demo.js "$@" ;;
+  native)
+    TASK_CLAUDE="${TASK_CLAUDE:-$(command -v claude || true)}"
+    if [ -z "$TASK_CLAUDE" ]; then echo 'Claude Code is needed for native tests. Use ./dev test for the independent simulator.' >&2; exit 1; fi
+    exec "$TASK_CLAUDE" plugin test . ;;
+  *) echo 'Usage: ./dev test | ./dev demo [--once] | ./dev native' >&2; exit 1 ;;
+esac

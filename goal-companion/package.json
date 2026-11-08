@@ -1,0 +1,12 @@
+{
+  "name": "goal-companion",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Optional goal-aware lessons alongside Claude Code",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "demo": "node scripts/demo.js"
+  },
+  "engines": { "node": ">=20" }
+}

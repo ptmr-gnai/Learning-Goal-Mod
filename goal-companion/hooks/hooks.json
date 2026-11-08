@@ -1,0 +1,4 @@
+{
+  "description": "Observe completed main turns and offer optional goal-aware coaching",
+  "modules": ["./register.js"]
+}

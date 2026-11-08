@@ -1,0 +1,12 @@
+{
+  "name": "learning-goal-mod",
+  "description": "Learning Goal, an optional learning companion for Claude Code.",
+  "owner": { "name": "Learning Goal contributors" },
+  "plugins": [
+    {
+      "name": "goal-companion",
+      "source": "./goal-companion",
+      "description": "Learning Goal: a local learning companion for Claude Code."
+    }
+  ]
+}
