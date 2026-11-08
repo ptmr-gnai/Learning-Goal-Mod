@@ -6,6 +6,12 @@ Learning Goal Mod is an experimental Claude Code mod that connects the work you 
 
 The mod runs in local Claude Code sessions, including the Code tab in Claude Desktop. It makes separate model requests with your session's model and credentials; these requests use your account's allowance even when no card is shown. This is an early personal-use experiment, not a learning assessment.
 
+## Learning Goal Mod in action
+
+An invitation appears above the prompt when the mod finds a connection between the current work and your goal:
+
+![A Claude Code session with a Learning Goal Mod invitation above the prompt](assets/learning-goal-in-action.png)
+
 ## Install
 
 Requires Claude Code 2.1.301 or later for the current interface. In Claude Code, add this repository as a marketplace:
