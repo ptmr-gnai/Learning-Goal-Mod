@@ -1,3 +1,5 @@
+![A glowing connection between code on a laptop and an open learning notebook](assets/learning-goal-header.png)
+
 # Learning Goal Mod for Claude Code
 
 Learning Goal Mod is an experimental Claude Code mod that connects the work you are doing to a learning goal. It can offer an optional card when a completed response contains a useful teaching moment. Open the card for a short explanation, tradeoff, and question grounded in the work.
@@ -30,6 +32,23 @@ In a local Claude Code session:
 The demo displays a fictional card without a model request. Choose **Explain** to open the lesson. To try real coaching, open `/learning-goal`, switch automatic checks off if you prefer manual use, and save a goal. After a substantive turn, choose **Explain recent work**. Automatic mode is on by default when a goal is activated unless you turn it off.
 
 See the [plugin guide](learning-goal-mod/README.md) for controls, frequency limits, data storage, and testing.
+
+## Choose how often it offers a lesson
+
+In the **Learning Goal Mod** settings pane, set both:
+
+- **Maximum cards per rolling hour:** 0–20; the default is 2.
+- **Cooldown between cards:** 0–1,440 minutes; the default is 5 minutes.
+
+For example, 3 cards per hour with a 15-minute cooldown permits at most three automatic invitations in a rolling hour and spaces them at least 15 minutes apart. These preferences are shared, but limits are counted per chat, not across all chats. Manual explanations bypass both card limits.
+
+Automatic checks have separate safeguards: at most six per session, at least five minutes apart. A check is a model request and can consume usage even when it doesn't produce a card. The mod does not currently detect whether you are looking at a chat.
+
+## How model requests work
+
+The mod uses Claude Code's [`$.model.fork`](https://code.claude.com/docs/en/plugins/mods/api#call-a-model) to send the current conversation and project context with a separate learning prompt. It uses the session's model and credentials, so it works with an authenticated Claude subscription supported by Claude Code without a separate API key or provider. The request counts toward your existing plan or API usage.
+
+A fork repeats the conversation's previous request, so it **can reuse the prompt cache** while that context remains cached. This can reduce repeated input processing, but a cache hit, a particular latency, or low cost is not guaranteed. The new learning prompt and generated response still require processing. Use `/learning-goal status` to see reported check and token counts, including cache reads.
 
 ## Privacy and limitations
 
