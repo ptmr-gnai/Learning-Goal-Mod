@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { harness, find, textOf, flush } from './harness.js';
-import { DEMO_EVIDENCE, DEMO_REPLY } from '../lib/core.js';
+import { DEFAULT_CONFIG, DEMO_EVIDENCE, DEMO_REPLY, updateRecords } from '../lib/core.js';
 
 const turnText = DEMO_EVIDENCE.text;
 const response = (ref = 'turn-1') => ({ text: JSON.stringify({ ...DEMO_REPLY, evidenceRef: ref }), usage: { output_tokens: 42, cache_read_input_tokens: 1200 } });
@@ -26,15 +26,40 @@ test('unconfigured plugin observes without spending; demo renders on both surfac
   await h.press('pane-known');
   assert.equal([...h.store.keys()].filter(k => k.startsWith('feedback:')).length, 0);
 });
-test('Learning Goal command and its legacy alias open the same demo', async () => {
+test('Learning Goal command opens the demo', async () => {
   const h = await harness();
   assert.ok(h.calls.commands.some(c => c.name === 'learning-goal'));
-  assert.ok(h.calls.commands.some(c => c.name === 'goal-coach'));
-  for (const command of ['learning-goal', 'goal-coach']) {
-    const result = await h.fire('command.run', { command, args: 'demo' });
-    assert.match(result.text, /invitation ready/);
-    assert.ok(find(await h.render('AbovePrompt'), n => n.key === 'open-lesson'));
-  }
+  const result = await h.fire('command.run', { command: 'learning-goal', args: 'demo' });
+  assert.match(result.text, /invitation ready/);
+  assert.ok(find(await h.render('AbovePrompt'), n => n.key === 'open-lesson'));
+});
+test('migrates old goal and records without modifying originals or overriding new data', async () => {
+  const oldDir = '/test-home/.config/claude-goal-companion/';
+  const newDir = '/test-home/.config/learning-goal-mod/';
+  const oldGoal = JSON.stringify({ ...DEFAULT_CONFIG, goal: { ...DEFAULT_CONFIG.goal, active: true } });
+  const oldRecords = JSON.stringify({ schemaVersion: 1, records: updateRecords([], DEFAULT_CONFIG.goal.intent, DEMO_REPLY, 'known', 100) });
+  const files = new Map([[oldDir + 'goals.json', oldGoal], [oldDir + 'learning-records.json', oldRecords]]);
+  const h = await harness({ files });
+  assert.equal(files.get(newDir + 'goals.json'), oldGoal);
+  assert.equal(files.get(newDir + 'learning-records.json'), oldRecords);
+  assert.equal(files.get(oldDir + 'goals.json'), oldGoal);
+  assert.equal(files.get(oldDir + 'learning-records.json'), oldRecords);
+  assert.match((await h.command('status')).text, /Goal: Understand software engineering/);
+  const custom = JSON.stringify({ ...DEFAULT_CONFIG, goal: { ...DEFAULT_CONFIG.goal, intent: 'A separate new learning goal' } });
+  files.set(newDir + 'goals.json', custom);
+  await harness({ files });
+  assert.equal(files.get(newDir + 'goals.json'), custom);
+});
+test('invalid old files prevent migration without overwriting either location', async () => {
+  const oldDir = '/test-home/.config/claude-goal-companion/';
+  const newDir = '/test-home/.config/learning-goal-mod/';
+  const oldGoal = JSON.stringify(DEFAULT_CONFIG);
+  const files = new Map([[oldDir + 'goals.json', oldGoal], [oldDir + 'learning-records.json', '{broken']]);
+  const h = await harness({ files });
+  assert.equal(files.get(oldDir + 'learning-records.json'), '{broken');
+  assert.equal(files.has(newDir + 'goals.json'), false);
+  assert.equal(files.has(newDir + 'learning-records.json'), false);
+  assert.match((await h.command('show')).text, /Could not load/);
 });
 test('rationale and engaged lessons persist and related records reach the next request', async () => {
   const h = await active({ model: () => response() });
@@ -43,10 +68,10 @@ test('rationale and engaged lessons persist and related records reach the next r
   assert.equal(why.rows, 4);
   assert.equal(find(settings, n => n.key === 'goal-input').rows, 6);
   await why.onSubmit('I want to make better architecture decisions.');
-  assert.equal(JSON.parse(h.files.get('/test-home/.config/claude-goal-companion/goals.json')).goal.why, 'I want to make better architecture decisions.');
+  assert.equal(JSON.parse(h.files.get('/test-home/.config/learning-goal-mod/goals.json')).goal.why, 'I want to make better architecture decisions.');
   await h.complete(turnText); await h.tick();
   await find(await h.render('AbovePrompt'), n => n.key === 'open-lesson').onPress();
-  const path = '/test-home/.config/claude-goal-companion/learning-records.json';
+  const path = '/test-home/.config/learning-goal-mod/learning-records.json';
   assert.deepEqual(JSON.parse(h.files.get(path)).records[0].actions, ['opened']);
   const next = await harness({ files: h.files, store: h.store, model: () => response() });
   next.advance(300_001); await next.complete(turnText); await next.tick();
@@ -56,7 +81,7 @@ test('rationale and engaged lessons persist and related records reach the next r
 });
 test('frequency settings persist and reject invalid values', async () => {
   const h = await active({ model: () => response() });
-  const path = '/test-home/.config/claude-goal-companion/goals.json';
+  const path = '/test-home/.config/learning-goal-mod/goals.json';
   await find(await h.render(), n => n.key === 'cards-per-hour').onSubmit('3');
   await find(await h.render(), n => n.key === 'card-cooldown').onSubmit('15');
   assert.equal(JSON.parse(h.files.get(path)).maxCardsPerHour, 3);
@@ -67,7 +92,7 @@ test('frequency settings persist and reject invalid values', async () => {
   assert.match((await next.command('status')).text, /at most 3 per hour; 15 minute cooldown/);
 });
 test('malformed learning records are preserved and prevent coaching', async () => {
-  const path = '/test-home/.config/claude-goal-companion/learning-records.json';
+  const path = '/test-home/.config/learning-goal-mod/learning-records.json';
   const files = new Map([[path, '{broken']]);
   const h = await harness({ files });
   await h.complete(turnText); await h.tick();
@@ -76,7 +101,7 @@ test('malformed learning records are preserved and prevent coaching', async () =
   assert.match((await h.command('show')).text, /Could not load/);
 });
 test('saving a goal after its rationale preserves the rationale and upgrades the old schema', async () => {
-  const path = '/test-home/.config/claude-goal-companion/goals.json';
+  const path = '/test-home/.config/learning-goal-mod/goals.json';
   const old = { schemaVersion: 1, goal: { id: 'personal-goal', revision: 1, intent: 'Understand software engineering', active: false }, automatic: false };
   const h = await harness({ files: new Map([[path, JSON.stringify(old)]]) });
   await h.command('show');
@@ -93,7 +118,7 @@ test('legacy feedback becomes durable records on the next engaged lesson', async
   const h = await active({ model: () => response() });
   await h.complete(turnText); await h.tick();
   await find(await h.render('AbovePrompt'), n => n.key === 'open-lesson').onPress();
-  const path = '/test-home/.config/claude-goal-companion/learning-records.json';
+  const path = '/test-home/.config/learning-goal-mod/learning-records.json';
   h.files.delete(path); // simulate a pre-upgrade installation
   const next = await harness({ files: h.files, store: h.store, model: () => response() });
   await next.command('history');
@@ -149,7 +174,7 @@ test('marking a lesson done records completion without declaring it known', asyn
   assert.equal(done.label, 'Mark as done');
   assert.equal(done.variant, 'primary');
   await h.press('pane-done');
-  const records = JSON.parse(h.files.get('/test-home/.config/claude-goal-companion/learning-records.json')).records;
+  const records = JSON.parse(h.files.get('/test-home/.config/learning-goal-mod/learning-records.json')).records;
   assert.deepEqual(records[0].actions, ['opened', 'done']);
   assert.equal(await h.render('AbovePrompt'), undefined);
   assert.match((await h.command('status')).text, /does not imply mastery/);
@@ -229,7 +254,7 @@ test('goal changes and session resets invalidate pending responses', async () =>
   }
 });
 test('damaged goal files are preserved and failed saves do not activate coaching', async () => {
-  const path = '/test-home/.config/claude-goal-companion/goals.json';
+  const path = '/test-home/.config/learning-goal-mod/goals.json';
   const h = await harness({ files: new Map([[path, '{bad json']]) });
   await h.command('set');
   assert.equal(h.files.get(path), '{bad json');
@@ -251,6 +276,6 @@ test('automatic request counts survive reload and export writes a bounded histor
   const next = await harness({ files: h.files, store: h.store });
   assert.match((await next.command('status')).text, /Automatic checks: 1\/6/);
   await next.command('export');
-  const output = JSON.parse(next.files.get('/test-home/.config/claude-goal-companion/history-export.json'));
+  const output = JSON.parse(next.files.get('/test-home/.config/learning-goal-mod/history-export.json'));
   assert.equal(output.history.at(-1).action, 'later');
 });

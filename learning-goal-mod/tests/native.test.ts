@@ -12,7 +12,7 @@ test('demo uses no model and its controls draw on terminal and desktop', async (
   await $.command.run({ ...commandContext, command: 'learning-goal', args: 'demo' });
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({
-      plugin: 'goal-companion', surface, component: 'Pane', requestId: 'goal-companion',
+      plugin: 'learning-goal-mod', surface, component: 'Pane', requestId: 'learning-goal-mod',
       props: paneProps,
     });
     expect(await ui.find({ type: 'Text', text: /Publish and subscribe/ })).toBeDefined();
@@ -82,8 +82,8 @@ test('background fork creates a grounded card and preserves a user draft', async
   await clock.advance(1000);
   expect(requests).toBe(1);
   await $.command.run({ ...commandContext, command: 'learning-goal', args: 'show' });
-  const ui = await $.ui.mount({ plugin: 'goal-companion', surface: 'terminal', component: 'Pane',
-    requestId: 'goal-companion', props: paneProps });
+  const ui = await $.ui.mount({ plugin: 'learning-goal-mod', surface: 'terminal', component: 'Pane',
+    requestId: 'learning-goal-mod', props: paneProps });
   await ui.press({ key: 'expand' });
   expect(await ui.find({ key: 'draft' })).toBeDefined();
   draft = 'My existing question. ';

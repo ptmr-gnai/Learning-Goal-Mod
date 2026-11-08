@@ -1,6 +1,6 @@
 {
-  "name": "goal-companion",
-  "version": "0.1.0",
+  "name": "learning-goal-mod",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Optional goal-aware lessons alongside Claude Code",

@@ -1,4 +1,4 @@
-# Learning Goal plugin guide
+# Learning Goal Mod plugin guide
 
 Learning Goal offers optional lessons connected to your coding work and a goal you set. See the [repository README](../README.md) for installation and a quick start.
 
@@ -21,7 +21,7 @@ Learning Goal offers optional lessons connected to your coding work and a goal y
 | Ask main agent | Append an editable question to the draft; never send it automatically |
 | Dismiss | Close a lesson without marking it done |
 
-`/goal-coach` remains a compatibility alias. The internal plugin name is `goal-companion`.
+The command is `/learning-goal` and the plugin identifier is `learning-goal-mod`.
 
 ## When it checks
 
@@ -33,22 +33,28 @@ The mod ignores subagent turn completions, but an independent background chat ca
 
 ## State and data
 
-The mod stores its goal and preferences in `~/.config/claude-goal-companion/goals.json`. The optional rationale explains why the goal matters. The file is created when you save a goal or preference. Invalid configuration is preserved and coaching stays inactive until it is repaired and the plugin is reloaded.
+The mod stores its goal and preferences in `~/.config/learning-goal-mod/goals.json`. The optional rationale explains why the goal matters. The file is created when you save a goal or preference. Invalid configuration is preserved and coaching stays inactive until it is repaired and the plugin is reloaded.
 
-Opening, completing, saving, or marking a real lesson known writes a compact record to `~/.config/claude-goal-companion/learning-records.json`. It includes the goal text, concept, example quote, explanation, next question, and actions. A demo creates no record, and a dismissal alone does not create one. Invalid records are preserved and prevent coaching until repaired. There is a 1,000-record limit; reaching it prevents adding a record rather than silently deleting older ones.
+Opening, completing, saving, or marking a real lesson known writes a compact record to `~/.config/learning-goal-mod/learning-records.json`. It includes the goal text, concept, example quote, explanation, next question, and actions. A demo creates no record, and a dismissal alone does not create one. Invalid records are preserved and prevent coaching until repaired. There is a 1,000-record limit; reaching it prevents adding a record rather than silently deleting older ones.
 
 Up to five records associated with the same exact goal text are selected by shared words with the latest answer and included in the next fork. This lexical matching can miss related concepts or select weak matches. Opening or completing a lesson is engagement, and “Already know” is self-reported; none proves mastery. A known concept may return when the coach identifies a new application, which is not independently verified.
 
-Recent feedback and usage counters also use Claude Code's plugin store, which may be cleaned up after inactivity. Retention is bounded to 100 feedback actions and 20 session usage records. Export writes `~/.config/claude-goal-companion/history-export.json`.
+Recent feedback and usage counters also use Claude Code's plugin store, which may be cleaned up after inactivity. Retention is bounded to 100 feedback actions and 20 session usage records. Export writes `~/.config/learning-goal-mod/history-export.json`.
 
 Learning records may contain project details. A fork sends the session context and selected records through the session's existing model connection. The mod adds no analytics service, separate provider, or API key.
+
+### Upgrading from the earlier plugin
+
+Disable or uninstall the earlier plugin before enabling this one. On its first start, if the new goal file doesn't exist, Learning Goal Mod validates and copies the earlier goal and learning-record files into the new directory, when present. It leaves the originals untouched and does not overwrite files in the new location. If an old file is invalid, the copy is stopped and the original is preserved.
+
+Claude Code keeps feedback history and usage counters in a store scoped to each plugin identity. They are not automatically copied to the new plugin: the old store remains available to the old plugin, and the new plugin starts with new counters. Saved goal settings and the separate learning-record file are copied; older feedback that exists only in the old plugin store is not. If needed, export the old history using its export command before uninstalling it.
 
 ## Development and verification
 
 From the repository root:
 
 ```sh
-cd goal-companion
+cd learning-goal-mod
 ./dev test
 claude plugin validate .
 claude plugin test .
@@ -56,7 +62,7 @@ claude plugin test .
 
 The independent suite uses Node.js 20 or later. Claude Code loads the plugin directly and does not require a separate Node installation. The native test kit uses stubs; it does not establish live model quality, cost, or latency. The demo card and pane have also been exercised in Claude Desktop, along with a live automatic lesson.
 
-For a local one-session terminal test, use `claude --plugin-dir /absolute/path/to/goal-companion`. To measure the desktop invitation's accessibility rectangles on macOS, show the demo card and run `swift scripts/measure-card.swift` from this directory. This requires accessibility permission and measures accessibility boxes, not CSS padding.
+For a local one-session terminal test, use `claude --plugin-dir /absolute/path/to/learning-goal-mod`. To measure the desktop invitation's accessibility rectangles on macOS, show the demo card and run `swift scripts/measure-card.swift` from this directory. This requires accessibility permission and measures accessibility boxes, not CSS padding.
 
 ## Limitations
 

@@ -55,7 +55,7 @@ export async function harness(options = {}) {
     return run(0);
   }
   async function render(component = 'Pane', surface = 'terminal', props = {}, bottom = undefined) {
-    return fire('ui.render', { component, surface, requestId: component === 'Pane' ? 'goal-companion' : 'band',
+    return fire('ui.render', { component, surface, requestId: component === 'Pane' ? 'learning-goal-mod' : 'band',
       props: { hasSurvey: false, isWorking: false, ...props } }, bottom);
   }
   async function press(key) {

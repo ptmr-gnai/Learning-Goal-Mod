@@ -12,7 +12,7 @@ const s = {
   inFlight: null, timer: null, known: [], history: [], metrics: freshMetrics(null),
   status: 'Set a goal to begin. Demo uses no model.', ready: false, saving: false, recordSaving: false, records: [], recordsPath: '', view: 'lesson',
 };
-const PANE = 'goal-companion';
+const PANE = 'learning-goal-mod';
 
 /** @param {Engine} $ */
 async function load($) {
@@ -27,8 +27,19 @@ async function load($) {
   s.id = await $.session.id();
   const home = await $.env.get('HOME');
   if (!home || !home.startsWith('/')) throw new Error('An absolute HOME is needed for the goal file.');
-  s.path = home + '/.config/claude-goal-companion/goals.json';
-  s.recordsPath = home + '/.config/claude-goal-companion/learning-records.json';
+  s.path = home + '/.config/learning-goal-mod/goals.json';
+  s.recordsPath = home + '/.config/learning-goal-mod/learning-records.json';
+  // Preserve existing data when upgrading the earlier plugin. Never overwrite
+  // new files or delete old ones; validate both inputs before copying either.
+  const oldDir = home + '/.config/claude-goal-companion/';
+  if (!(await $.fs.exists(s.path)) && await $.fs.exists(oldDir + 'goals.json')) {
+    const oldGoal = await $.fs.read(oldDir + 'goals.json');
+    parseConfig(oldGoal);
+    const oldRecords = await $.fs.exists(oldDir + 'learning-records.json') ? await $.fs.read(oldDir + 'learning-records.json') : null;
+    if (oldRecords !== null) parseRecords(oldRecords);
+    if (oldRecords !== null && !(await $.fs.exists(s.recordsPath))) await $.fs.write(s.recordsPath, oldRecords);
+    await $.fs.write(s.path, oldGoal);
+  }
   s.config = await $.fs.exists(s.path) ? parseConfig(await $.fs.read(s.path)) : copy(DEFAULT_CONFIG);
   s.metrics = freshMetrics(await $.store.get('metrics:' + s.id));
   const oldMetrics = (await $.store.keys()).filter(k => k.startsWith('metrics:') && k !== 'metrics:' + s.id);
@@ -159,7 +170,7 @@ async function feedback($, action) {
 
 /** @param {Engine} $ */
 async function openPane($) {
-  await $.ui.open({ id: PANE, title: 'Learning Goal', focus: true, closeOnEscape: true });
+  await $.ui.open({ id: PANE, title: 'Learning Goal Mod', focus: true, closeOnEscape: true });
 }
 
 /** @param {Engine} $ */
@@ -298,8 +309,7 @@ function statusText() {
 /** @type {import('claude-code').Register} */
 export const register = (on) => {
   on('session.start', async ($, e, next) => {
-    await $.command.register({ name: 'learning-goal', description: 'Learning Goal: optional lessons connected to your work. Try /learning-goal demo.' });
-    await $.command.register({ name: 'goal-coach', description: 'Compatibility alias for /learning-goal.' });
+    await $.command.register({ name: 'learning-goal', description: 'Learning Goal Mod: optional lessons connected to your work. Try /learning-goal demo.' });
     try { await load($); } catch { s.ready = false; problem($, 'Could not load goal settings. Existing files were left untouched.'); }
     return next(e);
   });
@@ -338,12 +348,10 @@ export const register = (on) => {
     return next(e);
   });
 
-  for (const name of ['learning-goal', 'goal-coach']) {
-    on('command.run', { command: name }, async ($, e) => {
-      try { return await command($, e.args); }
-      catch { return { text: 'Could not complete the learning command. Check the goal file and try again; existing task work is unaffected.' }; }
-    });
-  }
+  on('command.run', { command: 'learning-goal' }, async ($, e) => {
+    try { return await command($, e.args); }
+    catch { return { text: 'Could not complete the learning command. Check the goal file and try again; existing task work is unaffected.' }; }
+  });
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     const others = await next(e);
