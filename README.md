@@ -8,9 +8,9 @@ The mod runs in local Claude Code sessions, including the Code tab in Claude Des
 
 ## Learning Goal Mod in action
 
-An invitation appears above the prompt when the mod finds a connection between the current work and your goal:
+An invitation appears above the prompt when the mod finds a connection between the current work and your goal. Select **Explain** to explore the lesson alongside your conversation:
 
-![A Claude Code session with a Learning Goal Mod invitation above the prompt](assets/learning-goal-in-action.png)
+![A Claude Code session with a learning invitation above the prompt and its explanation in the Learning Goal Mod pane](assets/learning-goal-in-action.png)
 
 ## Install
 
