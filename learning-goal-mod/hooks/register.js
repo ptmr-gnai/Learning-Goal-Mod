@@ -170,7 +170,7 @@ async function feedback($, action) {
 
 /** @param {Engine} $ */
 async function openPane($) {
-  await $.ui.open({ id: PANE, title: 'Learning Goal Mod', focus: true, closeOnEscape: true });
+  await $.ui.open({ id: PANE, title: 'Learning Goal', focus: true, closeOnEscape: true });
 }
 
 /** @param {Engine} $ */
@@ -437,7 +437,6 @@ export const register = (on) => {
       }
     } else if (s.card) {
       const l = s.card.lesson;
-      children.push(section('YOUR GOAL', [body(s.config.goal.intent)]));
       children.push(section(s.card.demo ? 'ILLUSTRATIVE LESSON' : 'LEARNING OPPORTUNITY', [
         Text({ size: 'heading', weight: 'semibold', children: [l.concept] }), body(l.connection),
       ]));
